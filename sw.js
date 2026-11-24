@@ -1,6 +1,6 @@
 'use strict';
 const prefix = 'keto-apetyt-pages|' + self.registration.scope + '|';
-const cacheName = prefix + '01021831eca88b2c';
+const cacheName = prefix + 'a6effc7826721527';
 const assets = ["./index.html","./otworz.js","./manifest.webmanifest","./icon-180.png","./icon-192.png","./icon-512.png","./zeszyt.bin"];
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
