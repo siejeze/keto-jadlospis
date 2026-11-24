@@ -1,10 +1,10 @@
 'use strict';
 const root = self.registration.scope;
 const prefix = 'keto-apetyt-pages|' + root + '|';
-const cacheName = prefix + '8a984b8b4a0fedfb';
+const cacheName = prefix + '5ed0b3c95346c85d';
 const shell = ["index.html","otworz.js","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png"];
 const bookURL = new URL('zeszyt.bin', root);
-const bookHash = '2d7a2c7d6a6e40ebee0c45c8835d0f49e56f92eb4776ebfee86d2d69d324e9d9';
+const bookHash = 'ae485674e65ba59e754cac9e8d1e1e90f9dd5ab21752ef423adad86f54aff531';
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
