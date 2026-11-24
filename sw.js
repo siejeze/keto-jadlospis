@@ -1,31 +1,44 @@
 'use strict';
-const prefix = 'keto-apetyt-pages|' + self.registration.scope + '|';
-const cacheName = prefix + 'a6effc7826721527';
-const assets = ["./index.html","./otworz.js","./manifest.webmanifest","./icon-180.png","./icon-192.png","./icon-512.png","./zeszyt.bin"];
+const root = self.registration.scope;
+const prefix = 'keto-apetyt-pages|' + root + '|';
+const cacheName = prefix + 'd1781a5aeecc8515';
+const shell = ["index.html","otworz.js","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png"];
+const bookURL = new URL('zeszyt.bin', root);
+const bookHash = '6f418004e3d0adaff138291f341d12f63bdffb1278e7dd077921c266cab3a1ce';
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
+    const versionURL = new URL(bookURL);
+    versionURL.searchParams.set('v', bookHash);
+    const book = await fetch(versionURL, {cache:'no-store'});
+    if (!book.ok) throw new Error('Nie pobrano przepiśnika.');
+    const digest = await crypto.subtle.digest('SHA-256', await book.clone().arrayBuffer());
+    const hash = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2,'0')).join('');
+    if (hash !== bookHash) throw new Error('Publikacja nowego przepiśnika jest jeszcze w toku.');
     const cache = await caches.open(cacheName);
-    const requests = assets.map(path => new Request(new URL(path, self.registration.scope), {credentials:'same-origin', cache:'reload'}));
+    const requests = shell.map(file => new Request(new URL(file, root), {cache:'reload'}));
     await cache.addAll(requests);
+    await cache.put(bookURL.href, book);
+    await self.skipWaiting();
   })());
 });
+
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
+    await self.clients.claim();
     const keys = await caches.keys();
     await Promise.all(keys.filter(key => key.startsWith(prefix) && key !== cacheName).map(key => caches.delete(key)));
-    await self.clients.claim();
   })());
 });
+
 self.addEventListener('fetch', event => {
   const request = event.request;
-  if(request.method !== 'GET' || !request.url.startsWith(self.registration.scope)) return;
+  if (request.method !== 'GET' || !request.url.startsWith(root)) return;
   const url = new URL(request.url);
-  const root = new URL(self.registration.scope);
-  const directoryHome = request.mode === 'navigate' && url.pathname === root.pathname;
-  const resource = directoryHome ? new URL('index.html',root).href : request.url;
+  const home = request.mode === 'navigate' && url.pathname === new URL(root).pathname;
+  const resource = home ? new URL('index.html', root).href : request.url;
   event.respondWith((async () => {
     const cache = await caches.open(cacheName);
-    const hit = await cache.match(resource);
-    return hit || fetch(request);
+    return await cache.match(resource) || fetch(request);
   })());
 });
